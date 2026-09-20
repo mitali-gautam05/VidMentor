@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+youtube-transcript-api
+sentence-transformers
+faiss-cpu
+groq
