@@ -10,8 +10,6 @@ from sentence_transformers import SentenceTransformer
 import faiss, os, pickle, time
 from groq import Groq
 
-
-
 app = FastAPI()
 
 # Chrome extensions call from "chrome-extension://<id>" origin — allow that
