@@ -5,9 +5,9 @@
   "description": "Ask questions about the YouTube video you're watching, grounded in its transcript.",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": [
-    "*://www.youtube.com/*",
-    "http://localhost:8000/*"
-  ],
+  "*://www.youtube.com/*",
+  "https://vidmentor-6ixd.onrender.com/*"
+],
   "background": {
     "service_worker": "background.js"
   },
