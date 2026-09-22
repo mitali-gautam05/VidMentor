@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:8000"; // change to deployed URL later
+const BACKEND_URL = "https://vidmentor-6ixd.onrender.com"; 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "CHAT") {
