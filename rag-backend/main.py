@@ -11,6 +11,7 @@ from indexer import get_or_build_index
 from retrieval import retrieve
 from llm import call_groq_with_retry
 from prompts import build_prompt
+from query_rewrite import rewrite_query
 from schemas import IndexRequest, ChatRequest
 
 logger = logging.getLogger(__name__)
@@ -79,9 +80,10 @@ def chat(req: ChatRequest):
         return {"success": False, "error": error}
     chunks, index = result
 
-    retrieved = retrieve(req.query, chunks, index, req.current_time)
     key = _session_key(req)
     history = chat_sessions.get(key, [])
+    # Only the search uses the rewritten question; the prompt and history keep the original.
+    retrieved = retrieve(rewrite_query(req.query, history), chunks, index, req.current_time)
     prompt = build_prompt(retrieved, history, req.query)
 
     try:

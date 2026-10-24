@@ -116,11 +116,14 @@ GROQ_TIMEOUT_SEC=30.0
 # Optional overrides:
 # MAX_HISTORY_MESSAGES=20   # per-video chat history cap (even numbers only; defaults to 20)
 # MAX_CHAT_SESSIONS=100     # LRU store cap for concurrent sessions (defaults to 100)
+# REWRITE_ENABLED=1         # 0 turns off the follow-up question rewrite
+# REWRITE_TIMEOUT_SEC=8.0   # timeout for the rewrite call (defaults to 8.0)
 ```
 
 (Free key from [console.groq.com](https://console.groq.com/keys))
 
 `GROQ_TIMEOUT_SEC` configures the per-request Groq API timeout (in seconds) and defaults to `30.0`.
+Follow-up questions are rewritten into a standalone question before the transcript search (so "what's its time complexity?" finds the right part of the video). The rewrite is skipped when the chat has no history; with history it runs for short questions (under 8 words) or ones with a reference word like "it", "that" or "iska". Only the search uses the rewritten text; the prompt and history keep your original question, and on any error the original is used. `REWRITE_TIMEOUT_SEC` is the timeout for that extra Groq call (default `8.0`) and `REWRITE_ENABLED=0` turns it off.
 `MAX_HISTORY_MESSAGES` caps how many messages of chat history are kept per video session (rounded down to the nearest even number so whole exchanges stay intact; default `20`), and `MAX_CHAT_SESSIONS` caps how many video sessions are held in memory at once — the least recently used session is evicted when the store is full (default `100`).
 
 Run it:

@@ -15,6 +15,22 @@ def format_history(history):
     ) or "(no previous messages)"
 
 
+def build_rewrite_prompt(history, query):
+    """Ask the model to turn a follow-up question into one that makes sense on its own."""
+    history_text = format_history(history)
+    return f"""Rewrite the student's last question so it can be understood without the conversation.
+Replace pronouns and references (like "it", "that", "the second one") with what they refer to.
+Keep the student's wording and language otherwise. Do not answer the question and do not add
+anything new. Reply with only the rewritten question.
+
+Conversation so far:
+{history_text}
+
+Last question: {query}
+
+Rewritten question:"""
+
+
 def build_prompt(retrieved, history, query):
     context = format_context(retrieved)
     history_text = format_history(history)

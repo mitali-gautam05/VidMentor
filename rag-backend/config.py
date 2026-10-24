@@ -42,5 +42,21 @@ MAX_HISTORY_MESSAGES = int(os.environ.get("MAX_HISTORY_MESSAGES", "20"))
 MAX_HISTORY_MESSAGES = (MAX_HISTORY_MESSAGES // 2) * 2
 MAX_CHAT_SESSIONS = int(os.environ.get("MAX_CHAT_SESSIONS", "100"))
 
+# Query rewriting for follow-up questions (see query_rewrite.py).
+# With no chat history the rewrite is skipped. Otherwise it runs when the question is short
+# or contains a reference word. The LLM call is kept cheap: one attempt, short timeout.
+# Set REWRITE_ENABLED=0 to skip the rewrite (every follow-up costs one extra Groq call).
+REWRITE_ENABLED = os.environ.get("REWRITE_ENABLED", "1").strip().lower() not in ("0", "false", "no", "off")
+REWRITE_MAX_WORDS = 8
+REWRITE_MAX_CHARS = 200
+REWRITE_MAX_RETRIES = 1
+REWRITE_TIMEOUT_SEC = float(os.environ.get("REWRITE_TIMEOUT_SEC", 8.0))
+REWRITE_REFERENCE_WORDS = (
+    "it", "its", "this", "that", "these", "those", "they", "them", "he", "she", "him", "her",
+    "above", "previous", "earlier", "again", "former", "latter", "second", "third",
+    # Hinglish
+    "iska", "iski", "iske", "uska", "uski", "uske", "isme", "usme", "yeh", "ye", "woh", "wo",
+)
+
 # Cache
 CACHE_DIR = "rag_cache"

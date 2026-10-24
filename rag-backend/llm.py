@@ -38,13 +38,14 @@ def _is_transient_error(exc: Exception) -> bool:
     return False
 
 
-def call_groq_with_retry(prompt: str, max_retries: int = MAX_RETRIES) -> str:
+def call_groq_with_retry(prompt: str, max_retries: int = MAX_RETRIES, timeout: float | None = None) -> str:
     """Call the Groq API with bounded exponential backoff retries for transient failures.
 
     Args:
         prompt: The formatted prompt to send to the LLM.
         max_retries: Total number of attempts allowed (1 initial attempt + up to max_retries - 1 retries).
             Defaults to MAX_RETRIES from config (3 attempts).
+        timeout: Per-attempt request timeout in seconds. Defaults to GROQ_TIMEOUT_SEC.
 
     Returns:
         The generated answer text from the model.
@@ -56,7 +57,8 @@ def call_groq_with_retry(prompt: str, max_retries: int = MAX_RETRIES) -> str:
     """
     for attempt in range(max_retries):
         try:
-            response = groq_client.chat.completions.create(
+            client = groq_client if timeout is None else groq_client.with_options(timeout=timeout)
+            response = client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=LLM_TEMPERATURE,
