@@ -85,7 +85,25 @@
   font-weight: 500;
   flex-shrink: 0;
 }
-
+#yt-doubt-header-actions {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+#yt-doubt-clear{
+  border:1px solid rgba(255,255,255,0.6);
+  background:transparent;
+  color:white;
+  padding:5px 8px;
+  border-radius:5px;
+  font-family:inherit;
+  font-size:12px;
+  cursor:pointer;
+  transition:background 0.15s ease;
+}
+#yt-doubt-clear:hover {
+  background: rgba(255,255,255,0.2);
+}
 #yt-doubt-close {
   cursor: pointer;
   font-size: 16px;

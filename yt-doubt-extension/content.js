@@ -61,7 +61,10 @@ function createChatWidget() {
   panel.innerHTML = `
     <div id="yt-doubt-header">
       <span>Ask about this video</span>
-      <span id="yt-doubt-close">✕</span>
+      <div id="yt-doubt-header-actions">
+        <button id="yt-doubt-clear" type="button"> Clear chat</button>
+        <span id="yt-doubt-close" title="Close chat">✕</span>
+      </div>
     </div>
     <div id="yt-doubt-messages"></div>
     <div id="yt-doubt-input-row">
@@ -82,8 +85,18 @@ function createChatWidget() {
   });
 
   document.getElementById("yt-doubt-close").addEventListener("click", () => {
-    panel.classList.remove("yt-doubt-open");
-  });
+  panel.classList.remove("yt-doubt-open");
+});
+document.getElementById("yt-doubt-clear").addEventListener("click", () => {
+  const messagesDiv = document.getElementById("yt-doubt-messages");
+  if (!messagesDiv) return;
+
+  messagesDiv.replaceChildren();
+  addMessage(
+    "Hi! Ask me anything about this video and I'll answer using its transcript.",
+    "bot"
+  );
+});
 
   const input = document.getElementById("yt-doubt-input");
   document.getElementById("yt-doubt-send").addEventListener("click", sendMessage);
