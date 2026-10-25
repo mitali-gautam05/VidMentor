@@ -75,3 +75,19 @@ def test_changing_chunk_settings_does_not_reuse_old_chunks(tmp_path, monkeypatch
 
     monkeypatch.setattr(cache, "WINDOW_SEC", 40)
     assert cache.load_from_disk("vid") is not None
+
+
+def test_corrupt_cache_files_are_purged_and_returns_none(tmp_path, monkeypatch):
+    monkeypatch.setattr(cache, "CACHE_DIR", str(tmp_path))
+    video_id = "corrupt_video"
+    key = cache.get_cache_key(video_id)
+    idx_path = tmp_path / f"{key}.index"
+    chunks_path = tmp_path / f"{key}_chunks.pkl"
+
+    idx_path.write_bytes(b"invalid faiss header data")
+    chunks_path.write_bytes(b"corrupted pickle payload")
+
+    result = cache.load_from_disk(video_id)
+    assert result is None
+    assert not idx_path.exists()
+    assert not chunks_path.exists()

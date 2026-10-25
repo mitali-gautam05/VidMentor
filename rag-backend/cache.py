@@ -1,7 +1,10 @@
 import os
 import pickle
 import faiss
+import logging
 from config import CACHE_DIR, EMBEDDING_MODEL, WINDOW_SEC, OVERLAP_SEC
+
+logger = logging.getLogger(__name__)
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -26,7 +29,16 @@ def load_from_disk(video_id, model_name=None):
     key = get_cache_key(video_id, model_name)
     idx_path, chunks_path = f"{CACHE_DIR}/{key}.index", f"{CACHE_DIR}/{key}_chunks.pkl"
     if os.path.exists(idx_path) and os.path.exists(chunks_path):
-        with open(chunks_path, "rb") as f:
-            chunks = pickle.load(f)
-        return chunks, faiss.read_index(idx_path)
+        try:
+            with open(chunks_path, "rb") as f:
+                chunks = pickle.load(f)
+            return chunks, faiss.read_index(idx_path)
+        except Exception as e:
+            logger.warning("Corrupt disk cache for %s (%s); purging", video_id, e)
+            for path in (idx_path, chunks_path):
+                try:
+                    if os.path.exists(path):
+                        os.remove(path)
+                except OSError:
+                    pass
     return None
