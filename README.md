@@ -67,7 +67,7 @@ VidMentor/
 │   ├── chunking.py          # time-window chunking
 │   ├── embeddings.py        # shared embedding model
 │   ├── indexer.py           # build/load FAISS index per video
-│   ├── cache.py             # memory + disk cache
+│   ├── cache.py             # memory + disk or Redis cache
 │   ├── retrieval.py         # similarity search + time penalty
 │   ├── prompts.py           # prompt building
 │   ├── llm.py               # Groq client + retry
@@ -191,6 +191,15 @@ Deployed on [Render](https://render.com) (free tier):
 - Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 - Environment variable: `GROQ_API_KEY`
 
+### Keeping the cache across restarts (optional)
+
+By default the cache is a folder on local disk (`rag_cache`), which Render's free tier wipes on every redeploy and restart. Two ways to keep it:
+
+- **Persistent volume (disk backend):** mount a volume and set `CACHE_DIR=/data/cache`.
+- **Redis:** set `CACHE_BACKEND=redis` and `REDIS_URL=redis://...` (for example a free Redis plan), and install the optional client with `pip install -r requirements-redis.txt`. `CACHE_TTL_SEC` (optional, seconds) makes entries expire; unset or `0` means no expiry. Redis keys are prefixed with `vidmentor:cache:v1:`.
+
+If Redis is down, unreachable or returns a broken value, the backend logs a warning and treats it as a cache miss, so the index is rebuilt and `/chat` keeps working. The `redis` package is only imported when `CACHE_BACKEND=redis`.
+
 ---
 
 ## Known limitations
@@ -198,7 +207,7 @@ Deployed on [Render](https://render.com) (free tier):
 - **Transcript fetching can fail on cloud hosts.** YouTube blocks many cloud IPs (including Render's free tier), so the deployed backend may return "could not retrieve a transcript". It works from a normal home connection when you run the backend locally. A client-side transcript fetch would avoid this and is a good contribution.
 - **Embedding model:** By default, `all-MiniLM-L6-v2` is used for lightweight memory footprint (~200MB, well within the 512MB free-tier RAM limit). For Hindi transcripts, `EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2` can be opted into via `.env` (note: sits at ~445MB RAM; Roman-script Hinglish was not tested).
 - **Chat history is kept per session and video**, where a session is one id per browser profile (stored in `chrome.storage.local`), and it resets on restart.
-- **Free-tier hosting:** the server spins down after ~15 minutes of inactivity (first request after idle takes ~30-50s), and the disk is ephemeral, so cached indexes reset on redeploy/restart.
+- **Free-tier hosting:** the server spins down after ~15 minutes of inactivity (first request after idle takes ~30-50s), and the disk is ephemeral, so cached indexes reset on redeploy/restart unless you set up a persistent `CACHE_DIR` or Redis (see Deployment).
 
 ---
 
@@ -207,7 +216,6 @@ Deployed on [Render](https://render.com) (free tier):
 - Overlapping chunk windows (reduce context loss at chunk boundaries)
 - Multilingual model optimization for low-memory cloud hosts
 - Client-side transcript fetching (avoids YouTube IP blocking)
-- Move cache storage to Redis or a persistent volume
 - Voice input for asking doubts
 - Auto-pause video when the chat panel opens
 
