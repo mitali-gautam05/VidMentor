@@ -50,3 +50,22 @@ def test_returns_at_most_top_k(monkeypatch):
     chunks = make_chunks(0, 50, 100, 150, 200)
     index = FakeIndex([0.9, 0.8, 0.7, 0.6, 0.5])
     assert len(retrieval.retrieve("q", chunks, index, top_k=3)) == 3
+
+def test_empty_chunks_returns_empty_list(monkeypatch):
+    monkeypatch.setattr(retrieval, "embedder", FakeEmbedder())
+    index = FakeIndex([])
+    assert retrieval.retrieve("q", [], index) == []
+
+
+def test_negative_or_out_of_bounds_faiss_indices_are_ignored(monkeypatch):
+    monkeypatch.setattr(retrieval, "embedder", FakeEmbedder())
+    chunks = make_chunks(0, 100)
+
+    class IndexWithSentinels:
+        ntotal = 2
+        def search(self, q_emb, k):
+            return np.array([[0.9, 0.1]]), np.array([[0, -1]])
+
+    result = retrieval.retrieve("q", chunks, IndexWithSentinels(), top_k=5)
+    assert len(result) == 1
+    assert result[0]["start"] == 0
