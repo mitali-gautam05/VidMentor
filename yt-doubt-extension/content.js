@@ -227,10 +227,14 @@ function sendMessage() {
 function init() {
   createChatWidget();
 
-  let lastUrl = location.href;
+  let lastVideoId = getVideoId();
+  let lastPath = location.pathname;
   new MutationObserver(() => {
-    if (location.href !== lastUrl) {
-      lastUrl = location.href;
+    const currentVideoId = getVideoId();
+    const currentPath = location.pathname;
+    if (currentVideoId !== lastVideoId || currentPath !== lastPath) {
+      lastVideoId = currentVideoId;
+      lastPath = currentPath;
       // Remove old widget so a fresh one binds to the new video
       removeWidget();
       createChatWidget();
