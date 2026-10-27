@@ -263,3 +263,25 @@ html[dark] {
   /* #8ab4f8 is YouTube's dark-theme link blue (lighter than #1a73e8 for contrast) */
   --yt-doubt-link: #8ab4f8;
 }
+
+#yt-doubt-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#yt-doubt-export {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+#yt-doubt-export:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

@@ -61,7 +61,10 @@ function createChatWidget() {
   panel.innerHTML = `
     <div id="yt-doubt-header">
       <span>Ask about this video</span>
-      <span id="yt-doubt-close">✕</span>
+      <div id="yt-doubt-header-actions">
+        <button id="yt-doubt-export" title="Export notes as Markdown" type="button">📥 Export</button>
+        <span id="yt-doubt-close">✕</span>
+      </div>
     </div>
     <div id="yt-doubt-messages"></div>
     <div id="yt-doubt-input-row">
@@ -83,6 +86,34 @@ function createChatWidget() {
 
   document.getElementById("yt-doubt-close").addEventListener("click", () => {
     panel.classList.remove("yt-doubt-open");
+  });
+
+  document.getElementById("yt-doubt-export")?.addEventListener("click", () => {
+    const messages = panel.querySelectorAll(".yt-doubt-msg");
+    if (!messages.length) return;
+
+    let md = `# VidMentor Study Notes\n`;
+    md += `**Video:** https://www.youtube.com/watch?v=${getVideoId() || ""}\n`;
+    md += `**Exported:** ${new Date().toLocaleString()}\n\n---\n\n`;
+
+    messages.forEach((m) => {
+      const isUser = m.classList.contains("yt-doubt-user");
+      const role = isUser ? "### 👤 Question" : "### 🤖 VidMentor";
+      const text = isUser
+        ? m.textContent.trim()
+        : (m.querySelector(".yt-doubt-msg-content") || m).innerText.trim();
+      md += `${role}\n\n${text}\n\n`;
+    });
+
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `VidMentor_Notes_${getVideoId() || "video"}.md`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   });
 
   const input = document.getElementById("yt-doubt-input");
