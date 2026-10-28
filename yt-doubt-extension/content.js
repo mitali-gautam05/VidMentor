@@ -136,10 +136,28 @@ function addMessage(text, sender) {
   msg.className = `yt-doubt-msg yt-doubt-${sender}`;
 
   if (sender === "bot") {
-    msg.innerHTML = formatAnswerWithTimestampLinks(text);
-    msg.querySelectorAll(".yt-doubt-timestamp-link").forEach((el) => {
+    const contentSpan = document.createElement("div");
+    contentSpan.className = "yt-doubt-msg-content";
+    contentSpan.innerHTML = formatAnswerWithTimestampLinks(text);
+    contentSpan.querySelectorAll(".yt-doubt-timestamp-link").forEach((el) => {
       el.addEventListener("click", () => seekTo(parseInt(el.dataset.seconds, 10)));
     });
+    msg.appendChild(contentSpan);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "yt-doubt-copy-btn";
+    copyBtn.title = "Copy answer";
+    copyBtn.textContent = "📋 Copy";
+    copyBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = "✓ Copied!";
+        setTimeout(() => {
+          copyBtn.textContent = "📋 Copy";
+        }, 1500);
+      });
+    });
+    msg.appendChild(copyBtn);
   } else {
     msg.textContent = text;
   }

@@ -263,3 +263,22 @@ html[dark] {
   /* #8ab4f8 is YouTube's dark-theme link blue (lighter than #1a73e8 for contrast) */
   --yt-doubt-link: #8ab4f8;
 }
+
+.yt-doubt-copy-btn {
+  display: inline-block;
+  margin-top: 6px;
+  background: transparent;
+  border: 1px solid var(--yt-doubt-subtle);
+  color: var(--yt-doubt-muted);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.yt-doubt-copy-btn:hover {
+  background: var(--yt-doubt-elevated);
+  color: var(--yt-doubt-text);
+  border-color: var(--yt-doubt-border);
+}
