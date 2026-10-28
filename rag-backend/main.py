@@ -108,7 +108,17 @@ def chat(req: ChatRequest):
         )
 
     _remember(key, req.query, answer)
-    return {"success": True, "answer": answer}
+    response_data = {"success": True, "answer": answer}
+    if req.include_sources:
+        response_data["sources"] = [
+            {
+                "start": c.get("start"),
+                "end": c.get("end"),
+                "text": c.get("text"),
+            }
+            for c in retrieved
+        ]
+    return response_data
 
 
 @app.get("/health")

@@ -150,3 +150,22 @@ def test_chat_subsequent_request_succeeds_after_failed_attempt(client, monkeypat
     assert history[0]["content"] == "Second question that works"
     assert history[1]["content"] == "Good answer"
 
+
+
+def test_chat_with_include_sources_returns_sources(client, monkeypatch):
+    monkeypatch.setattr(main, "get_or_build_index", lambda vid: (fake_index_result(), None))
+    monkeypatch.setattr(main, "retrieve", lambda query, chunks, idx, ct: chunks)
+    monkeypatch.setattr(main, "call_groq_with_retry", lambda prompt: "Good answer")
+
+    response = client.post(
+        "/chat",
+        json={"video_id": "vid_src_1", "query": "Test query", "include_sources": True},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["answer"] == "Good answer"
+    assert "sources" in data
+    assert len(data["sources"]) == 1
+    assert data["sources"][0]["start"] == 0
+    assert data["sources"][0]["end"] == 30

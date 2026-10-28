@@ -10,3 +10,4 @@ class ChatRequest(BaseModel):
     query: str
     current_time: float | None = None
     session_id: str | None = Field(default=None, max_length=64)
+    include_sources: bool = False
