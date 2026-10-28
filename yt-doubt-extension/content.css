@@ -263,3 +263,37 @@ html[dark] {
   /* #8ab4f8 is YouTube's dark-theme link blue (lighter than #1a73e8 for contrast) */
   --yt-doubt-link: #8ab4f8;
 }
+
+#yt-doubt-chips {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--yt-doubt-elevated);
+  border-top: 1px solid var(--yt-doubt-border);
+  overflow-x: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+#yt-doubt-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.yt-doubt-chip {
+  background: var(--yt-doubt-surface-alt);
+  border: 1px solid var(--yt-doubt-border);
+  color: var(--yt-doubt-text);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.yt-doubt-chip:hover {
+  background: var(--yt-doubt-primary);
+  color: white;
+  border-color: var(--yt-doubt-primary);
+}

@@ -64,6 +64,11 @@ function createChatWidget() {
       <span id="yt-doubt-close">✕</span>
     </div>
     <div id="yt-doubt-messages"></div>
+    <div id="yt-doubt-chips">
+      <button class="yt-doubt-chip" data-query="Summarize this video" type="button">💡 Summarize</button>
+      <button class="yt-doubt-chip" data-query="What are the key takeaways?" type="button">📌 Key Takeaways</button>
+      <button class="yt-doubt-chip" data-query="Explain the main concept simply" type="button">👶 Explain Simply</button>
+    </div>
     <div id="yt-doubt-input-row">
       <input id="yt-doubt-input" type="text" placeholder="Type your doubt..." autocomplete="off" />
       <button id="yt-doubt-send">Send</button>
@@ -83,6 +88,17 @@ function createChatWidget() {
 
   document.getElementById("yt-doubt-close").addEventListener("click", () => {
     panel.classList.remove("yt-doubt-open");
+  });
+
+  panel.querySelectorAll(".yt-doubt-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const q = chip.getAttribute("data-query");
+      const inp = document.getElementById("yt-doubt-input");
+      if (inp && q) {
+        inp.value = q;
+        sendMessage();
+      }
+    });
   });
 
   const input = document.getElementById("yt-doubt-input");
