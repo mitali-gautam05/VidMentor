@@ -1,7 +1,10 @@
 import os
 import json
 import faiss
+import logging
 from config import CACHE_DIR, EMBEDDING_MODEL, WINDOW_SEC, OVERLAP_SEC
+
+logger = logging.getLogger(__name__)
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -31,11 +34,18 @@ def load_from_disk(video_id, model_name=None):
             with open(chunks_path, "r", encoding="utf-8") as f:
                 chunks = json.load(f)
             if not isinstance(chunks, list):
-                return None
+                raise ValueError("Chunks must be a list")
             for chunk in chunks:
                 if not isinstance(chunk, dict) or "text" not in chunk or "start" not in chunk:
-                    return None
+                    raise ValueError("Malformed chunk structure")
             return chunks, faiss.read_index(idx_path)
-        except (json.JSONDecodeError, ValueError, OSError):
+        except Exception as e:
+            logger.warning("Corrupt disk cache for %s (%s); purging", video_id, e)
+            for path in (idx_path, chunks_path):
+                try:
+                    if os.path.exists(path):
+                        os.remove(path)
+                except OSError:
+                    pass
             return None
     return None
