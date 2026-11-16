@@ -59,4 +59,15 @@ REWRITE_REFERENCE_WORDS = (
 )
 
 # Cache
-CACHE_DIR = "rag_cache"
+# "disk" (default) or "redis". Redis is only imported when it is selected.
+CACHE_BACKEND = os.environ.get("CACHE_BACKEND", "disk").strip().lower()
+# Folder for the disk backend. Point it at a persistent volume (e.g. /data/cache) to keep indexes.
+CACHE_DIR = os.environ.get("CACHE_DIR", "rag_cache")
+# Only used when CACHE_BACKEND=redis.
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+# Seconds before a Redis entry expires. Unset, 0 or invalid means no expiry.
+try:
+    CACHE_TTL_SEC = int(os.environ.get("CACHE_TTL_SEC", "0"))
+except ValueError:
+    CACHE_TTL_SEC = 0
+CACHE_TTL_SEC = max(CACHE_TTL_SEC, 0)
