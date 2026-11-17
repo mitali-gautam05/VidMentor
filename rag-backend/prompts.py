@@ -2,10 +2,19 @@ from config import PROMPT_HISTORY_MESSAGES
 
 
 def format_context(chunks):
-    """Turn retrieved chunks into '[m:ss] text' lines for the prompt."""
-    return "\n\n".join(
-        f"[{int(c['start']//60)}:{int(c['start']%60):02d}] {c['text']}" for c in chunks
-    )
+    """Turn retrieved chunks into '[m:ss] text' lines (h:mm:ss after 1 hour)."""
+    lines = []
+    for c in chunks:
+        start = int(c["start"])
+        if start >= 3600:
+            h = start // 3600
+            m = (start % 3600) // 60
+            s = start % 60
+            ts = f"{h}:{m:02d}:{s:02d}"
+        else:
+            ts = f"{start // 60}:{start % 60:02d}"
+        lines.append(f"[{ts}] {c['text']}")
+    return "\n\n".join(lines)
 
 
 def format_history(history):

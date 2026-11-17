@@ -7,6 +7,16 @@ def test_timestamp_is_minutes_and_zero_padded_seconds():
     assert format_context(chunks) == "[1:05] hello"
 
 
+def test_timestamp_uses_hours_after_one_hour():
+    chunks = [{"text": "hello", "start": 3725, "end": 3760}]
+    assert format_context(chunks) == "[1:02:05] hello"
+
+
+def test_timestamp_exactly_one_hour_is_hmmss():
+    chunks = [{"text": "hello", "start": 3600, "end": 3640}]
+    assert format_context(chunks) == "[1:00:00] hello"
+
+
 def test_empty_history_uses_placeholder():
     assert format_history([]) == "(no previous messages)"
 
