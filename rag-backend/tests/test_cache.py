@@ -196,3 +196,103 @@ def test_legacy_pickle_file_ignored(tmp_path, monkeypatch):
     assert result is not None
     loaded_chunks, _ = result
     assert loaded_chunks == [{"text": "new json data", "start": 5}]
+
+
+VALID_ID_13 = "atmcchk1234"
+VALID_ID_14 = "atmcflr1234"
+VALID_ID_15 = "atmctrn1234"
+
+
+def test_atomic_save_and_mismatched_pair_detection(tmp_path, monkeypatch):
+    """Test that a stale or mismatched file pair (from an interrupted write) is treated as a cache miss."""
+    import time
+    monkeypatch.setattr(cache, "CACHE_DIR", str(tmp_path))
+
+    video_id = VALID_ID_13
+    chunks = [{"text": "Hello world", "start": 0}]
+    index = faiss.IndexFlatIP(4)
+    index.add(np.array([[1.0, 0.0, 0.0, 0.0]], dtype="float32"))
+
+    cache.save_to_disk(video_id, chunks, index)
+    assert cache.load_from_disk(video_id) is not None
+
+    key = cache.get_cache_key(video_id)
+    chunks_path = tmp_path / f"{key}_chunks.json"
+
+    # Simulate an interrupted write by artificially offsetting chunks timestamp by 100 seconds
+    stale_time = time.time() - 100
+    os.utime(str(chunks_path), (stale_time, stale_time))
+
+    # Mismatched timestamps must be safely ignored as a cache miss
+    assert cache.load_from_disk(video_id) is None
+
+
+def test_atomic_save_cleans_up_temp_files_on_failure(tmp_path, monkeypatch):
+    """Verify that if writing fails midway, temporary staging files are removed."""
+    monkeypatch.setattr(cache, "CACHE_DIR", str(tmp_path))
+
+    video_id = VALID_ID_14
+    chunks = [{"text": "Test chunk", "start": 0}]
+    index = faiss.IndexFlatIP(4)
+
+    def broken_write_index(*args, **kwargs):
+        raise IOError("Disk write simulation failure")
+
+    monkeypatch.setattr(faiss, "write_index", broken_write_index)
+
+    import pytest
+    with pytest.raises(IOError, match="Disk write simulation failure"):
+        cache.save_to_disk(video_id, chunks, index)
+
+    tmp_files = list(tmp_path.glob("*.tmp*"))
+    assert len(tmp_files) == 0
+
+
+def test_atomic_save_torn_read_prevention_under_concurrency(tmp_path, monkeypatch):
+    """Run concurrent readers and writers to verify that readers never encounter torn or partial JSON."""
+    import threading
+    import time
+    monkeypatch.setattr(cache, "CACHE_DIR", str(tmp_path))
+
+    video_id = VALID_ID_15
+    chunks = [{"text": f"Chunk payload line {i}", "start": i * 10} for i in range(20)]
+    index = faiss.IndexFlatIP(4)
+    index.add(np.array([[1.0, 0.0, 0.0, 0.0]], dtype="float32"))
+
+    read_errors = []
+    stop_event = threading.Event()
+
+    def continuous_writer():
+        while not stop_event.is_set():
+            try:
+                cache.save_to_disk(video_id, chunks, index)
+            except Exception as e:
+                read_errors.append(f"Writer error: {e}")
+            time.sleep(0.002)
+
+    def continuous_reader():
+        for _ in range(50):
+            try:
+                result = cache.load_from_disk(video_id)
+                if result is not None:
+                    loaded_chunks, loaded_index = result
+                    assert len(loaded_chunks) == len(chunks)
+                    assert loaded_chunks[0]["text"] == chunks[0]["text"]
+            except Exception as e:
+                read_errors.append(f"Reader error (torn read): {e}")
+            time.sleep(0.001)
+
+    writer_thread = threading.Thread(target=continuous_writer)
+    reader_threads = [threading.Thread(target=continuous_reader) for _ in range(3)]
+
+    writer_thread.start()
+    for t in reader_threads:
+        t.start()
+
+    for t in reader_threads:
+        t.join()
+
+    stop_event.set()
+    writer_thread.join()
+
+    assert len(read_errors) == 0, f"Concurrency errors detected: {read_errors}"
