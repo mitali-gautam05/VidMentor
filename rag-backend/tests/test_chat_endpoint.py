@@ -261,3 +261,65 @@ def test_invalid_index_request_creates_no_cache_files(client, tmp_path, monkeypa
     cache_files = list(tmp_path.iterdir())
     assert len(cache_files) == 0, f"Unexpected cache files created: {cache_files}"
 
+
+
+def test_chat_accepts_client_transcript(client, monkeypatch):
+    captured = {}
+    def mock_get_or_build(vid, raw_transcript=None):
+        captured["vid"] = vid
+        captured["transcript"] = raw_transcript
+        return fake_index_result(), None
+
+    monkeypatch.setattr(main, "get_or_build_index", mock_get_or_build)
+    monkeypatch.setattr(main, "retrieve", lambda query, chunks, idx, ct: chunks)
+    monkeypatch.setattr(main, "call_groq_with_retry", lambda prompt: "Answer with client transcript.")
+
+    client_transcript = [
+        {"text": "First segment from client", "start": 0.0, "duration": 5.0},
+        {"text": "Second segment from client", "start": 5.0, "duration": 5.0},
+    ]
+
+    response = client.post(
+        "/chat",
+        json={
+            "video_id": VALID_ID_1,
+            "query": "Tell me about this video",
+            "transcript": client_transcript,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["answer"] == "Answer with client transcript."
+    assert captured["vid"] == VALID_ID_1
+    assert captured["transcript"] == client_transcript
+
+
+def test_index_accepts_client_transcript(client, monkeypatch):
+    captured = {}
+    def mock_get_or_build(vid, raw_transcript=None):
+        captured["vid"] = vid
+        captured["transcript"] = raw_transcript
+        return fake_index_result(), None
+
+    monkeypatch.setattr(main, "get_or_build_index", mock_get_or_build)
+
+    client_transcript = [
+        {"text": "Indexing segment from browser", "start": 1.0, "duration": 3.0}
+    ]
+
+    response = client.post(
+        "/index",
+        json={
+            "video_id": VALID_ID_1,
+            "transcript": client_transcript,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["message"] == "Video indexed and ready."
+    assert captured["vid"] == VALID_ID_1
+    assert captured["transcript"] == client_transcript
