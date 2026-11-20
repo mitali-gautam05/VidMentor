@@ -111,6 +111,21 @@ def chat(req: ChatRequest):
     return {"success": True, "answer": answer}
 
 
+@app.get("/video/{video_id}/status")
+def video_status(video_id: str):
+    result, error = get_or_build_index(video_id)
+    if result is None:
+        return {"success": False, "error": error}
+    chunks, index = result
+    duration = chunks[-1].get("end", 0.0) if chunks else 0.0
+    return {
+        "success": True,
+        "video_id": video_id,
+        "chunks_count": len(chunks),
+        "duration_sec": duration,
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}

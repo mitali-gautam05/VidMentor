@@ -42,3 +42,24 @@ def test_an_old_session_is_evicted_not_the_recently_used_one():
     assert "video-0" in main.chat_sessions  # it survived the eviction
     assert "video-1" not in main.chat_sessions  # the next-oldest went instead
     assert isinstance(main.chat_sessions, OrderedDict)  # sanity: LRU by recency
+
+
+def test_video_status_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+    client = TestClient(main.app)
+
+    fake_chunks = [{"text": "Sample text", "start": 0.0, "end": 45.0}]
+    fake_idx = object()
+    monkeypatch.setattr(main, "get_or_build_index", lambda vid: ((fake_chunks, fake_idx), None) if vid == "valid_vid" else (None, "Video not found"))
+
+    r_ok = client.get("/video/valid_vid/status")
+    assert r_ok.status_code == 200
+    data = r_ok.json()
+    assert data["success"] is True
+    assert data["video_id"] == "valid_vid"
+    assert data["chunks_count"] == 1
+    assert data["duration_sec"] == 45.0
+
+    r_err = client.get("/video/invalid_vid/status")
+    assert r_err.status_code == 200
+    assert r_err.json() == {"success": False, "error": "Video not found"}
