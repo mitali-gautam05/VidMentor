@@ -60,7 +60,13 @@ function indexVideo(videoId) {
     body: JSON.stringify({ video_id: videoId }),
   })
     .then(parseResponse)
-    .catch((err) => ({ success: false, error: String(err) }));
+    .catch((err) => ({ success: false, error: String(err) }))
+    .then((result) => {
+      if (!result?.success) {
+        indexTasks.delete(videoId);
+      }
+      return result;
+    });
 
   indexTasks.set(videoId, promise);
   return promise;
