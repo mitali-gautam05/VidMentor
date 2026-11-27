@@ -76,7 +76,7 @@ VidMentor/
 │   ├── chunking.py          # time-window chunking (with overlap)
 │   ├── embeddings.py        # shared embedding model
 │   ├── indexer.py           # build/load FAISS index per video
-│   ├── cache.py             # memory + disk cache (FAISS index + chunks as JSON)
+│   ├── cache.py             # memory + disk or Redis cache (FAISS index + chunks as JSON)
 │   ├── retrieval.py         # similarity search + time penalty
 │   ├── query_rewrite.py     # follow-up question -> standalone question (search only)
 │   ├── prompts.py           # prompt building
@@ -218,6 +218,15 @@ Deployed on [Render](https://render.com) (free tier):
 - Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 - Environment variable: `GROQ_API_KEY`
 
+### Keeping the cache across restarts (optional)
+
+By default the cache is a folder on local disk (`rag_cache`), which Render's free tier wipes on every redeploy and restart. Two ways to keep it:
+
+- **Persistent volume (disk backend):** mount a volume and set `CACHE_DIR=/data/cache`.
+- **Redis:** set `CACHE_BACKEND=redis` and `REDIS_URL=redis://...` (for example a free Redis plan), and install the optional client with `pip install -r requirements-redis.txt`. `CACHE_TTL_SEC` (optional, seconds) makes entries expire; unset or `0` means no expiry. Redis keys are prefixed with `vidmentor:cache:v1:`.
+
+If Redis is down, unreachable or returns a broken value, the backend logs a warning and treats it as a cache miss, so the index is rebuilt and `/chat` keeps working. The `redis` package is only imported when `CACHE_BACKEND=redis`.
+
 ---
 
 ## Known limitations
@@ -228,7 +237,7 @@ Deployed on [Render](https://render.com) (free tier):
 - **Backend URL is hardcoded** in `background.js`. A settings page for it is planned (see [#8](../../issues/8) and [#40](../../issues/40)).
 - **Chat history is kept per session and video**, where a session is one id per browser profile (stored in `chrome.storage.local`), and it resets on restart.
 - **Old `.pkl` caches** from before the JSON change are ignored and rebuilt. They are not deleted.
-- **Free-tier hosting:** the server spins down after ~15 minutes of inactivity (first request after idle takes ~30-50s), and the disk is ephemeral, so cached indexes reset on redeploy/restart.
+- **Free-tier hosting:** the server spins down after ~15 minutes of inactivity (first request after idle takes ~30-50s), and the disk is ephemeral, so cached indexes reset on redeploy/restart unless you set up a persistent `CACHE_DIR` or Redis (see Deployment).
 
 ---
 
