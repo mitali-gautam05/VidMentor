@@ -114,6 +114,51 @@
   opacity: 1;
 }
 
+#yt-doubt-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#yt-doubt-clear {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  line-height: 1.2;
+  opacity: 0.9;
+  padding: 3px 8px;
+  border-radius: 4px;
+  transition: background 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+#yt-doubt-clear:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.7);
+  opacity: 1;
+}
+
+#yt-doubt-clear:active:not(:disabled) {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+#yt-doubt-clear:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+#yt-doubt-clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 #yt-doubt-close:focus-visible {
   outline: 2px solid white;
   outline-offset: 2px;
